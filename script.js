@@ -11,9 +11,11 @@ const alunos = [
 
 const form = document.getElementById("notasForm");
 const alunoSelect = document.getElementById("alunoSelect");
+const raInput = document.getElementById("raInput");
 const notaP1 = document.getElementById("notaP1");
 const notaP2 = document.getElementById("notaP2");
 const erroAluno = document.getElementById("erroAluno");
+const erroRa = document.getElementById("erroRa");
 const erroP1 = document.getElementById("erroP1");
 const erroP2 = document.getElementById("erroP2");
 const formFeedback = document.getElementById("formFeedback");
@@ -23,7 +25,9 @@ const mainNav = document.getElementById("mainNav");
 
 function calcularMedia(aluno) {
   if (aluno.p1 === null || aluno.p2 === null) return null;
-  return (aluno.p1 + aluno.p2) / 2;
+  // Arredonda para uma casa decimal para que a média exibida na tabela
+  // seja exatamente a mesma usada na definição da situação do aluno.
+  return Math.round(((aluno.p1 + aluno.p2) / 2) * 10) / 10;
 }
 
 function definirSituacao(media) {
@@ -84,8 +88,8 @@ function renderizarTabela(raDestaque) {
 }
 
 function limparErros() {
-  [erroAluno, erroP1, erroP2].forEach((el) => (el.textContent = ""));
-  [alunoSelect, notaP1, notaP2].forEach((el) => el.classList.remove("invalido"));
+  [erroAluno, erroRa, erroP1, erroP2].forEach((el) => (el.textContent = ""));
+  [alunoSelect, raInput, notaP1, notaP2].forEach((el) => el.classList.remove("invalido"));
   formFeedback.textContent = "";
   formFeedback.className = "form-feedback";
 }
@@ -118,12 +122,34 @@ function validarNota(campo, elementoErro, rotulo) {
   return valor;
 }
 
-function preencherNotasDoAluno() {
-  const aluno = alunos.find((a) => a.ra === alunoSelect.value);
+function preencherNotasDoAluno(aluno) {
   if (!aluno) return;
 
   notaP1.value = aluno.p1 === null ? "" : aluno.p1;
   notaP2.value = aluno.p2 === null ? "" : aluno.p2;
+}
+
+function validarRa() {
+  const bruto = raInput.value.trim();
+
+  if (bruto === "") {
+    marcarErro(raInput, erroRa, "O RA é obrigatório.");
+    return null;
+  }
+
+  if (!RA_REGEX.test(bruto)) {
+    marcarErro(raInput, erroRa, "RA inválido: informe exatamente 5 dígitos (ex.: 12345).");
+    return null;
+  }
+
+  const aluno = alunos.find((a) => a.ra === bruto);
+
+  if (!aluno) {
+    marcarErro(raInput, erroRa, `Nenhum aluno da disciplina possui o RA ${bruto}.`);
+    return null;
+  }
+
+  return aluno;
 }
 
 form.addEventListener("submit", (evento) => {
@@ -132,14 +158,13 @@ form.addEventListener("submit", (evento) => {
 
   let valido = true;
 
-  const ra = alunoSelect.value;
-  if (!ra) {
+  if (!alunoSelect.value) {
     marcarErro(alunoSelect, erroAluno, "Selecione um aluno.");
     valido = false;
-  } else if (!RA_REGEX.test(ra)) {
-    marcarErro(alunoSelect, erroAluno, "O RA deve conter exatamente 5 dígitos.");
-    valido = false;
   }
+
+  const alunoDoRa = validarRa();
+  if (alunoDoRa === null) valido = false;
 
   const p1 = validarNota(notaP1, erroP1, "P1");
   if (p1 === null) valido = false;
@@ -153,7 +178,7 @@ form.addEventListener("submit", (evento) => {
     return;
   }
 
-  const aluno = alunos.find((a) => a.ra === ra);
+  const aluno = alunoDoRa;
   aluno.p1 = p1;
   aluno.p2 = p2;
 
@@ -172,7 +197,18 @@ form.addEventListener("reset", () => {
 
 alunoSelect.addEventListener("change", () => {
   limparErros();
-  preencherNotasDoAluno();
+  const aluno = alunos.find((a) => a.ra === alunoSelect.value);
+  raInput.value = aluno ? aluno.ra : "";
+  preencherNotasDoAluno(aluno);
+});
+
+raInput.addEventListener("input", () => {
+  const aluno = alunos.find((a) => a.ra === raInput.value);
+  if (aluno) {
+    limparErros();
+    alunoSelect.value = aluno.ra;
+    preencherNotasDoAluno(aluno);
+  }
 });
 
 menuToggle.addEventListener("click", () => {

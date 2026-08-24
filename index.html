@@ -49,12 +49,20 @@
     <section id="cadastro-notas" class="card">
       <h2>Cadastro de Notas</h2>
       <form id="notasForm" novalidate>
-        <div class="form-group">
-          <label for="alunoSelect">Aluno</label>
-          <select id="alunoSelect" name="aluno" required>
-            <option value="" disabled selected>Selecione um aluno</option>
-          </select>
-          <span class="error-message" id="erroAluno"></span>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="alunoSelect">Aluno</label>
+            <select id="alunoSelect" name="aluno" required>
+              <option value="" disabled selected>Selecione um aluno</option>
+            </select>
+            <span class="error-message" id="erroAluno"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="raInput">RA / Matrícula</label>
+            <input type="text" id="raInput" name="ra" inputmode="numeric" maxlength="5" placeholder="Ex.: 12345" required />
+            <span class="error-message" id="erroRa"></span>
+          </div>
         </div>
 
         <div class="form-row">
